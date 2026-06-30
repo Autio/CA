@@ -245,8 +245,30 @@
         // Load data from GitHub
         async function loadData() {
             try {
-                const response = await fetch('https://raw.githubusercontent.com/Autio/cancer-advocate-data/main/known_items.json');
-                const data = await response.json();
+                // Try multiple URLs in case one fails
+                const urls = [
+                    'https://raw.githubusercontent.com/Autio/CA/main/known_items.json',
+                    'https://github.com/Autio/CA/raw/main/known_items.json'
+                ];
+                
+                let data = null;
+                let error = null;
+                
+                for (const url of urls) {
+                    try {
+                        const response = await fetch(url);
+                        if (response.ok) {
+                            data = await response.json();
+                            break;
+                        }
+                    } catch (e) {
+                        error = e;
+                    }
+                }
+                
+                if (!data) {
+                    throw error || new Error('Failed to load data from all URLs');
+                }
                 
                 allData = data.items || [];
                 updateStats();
